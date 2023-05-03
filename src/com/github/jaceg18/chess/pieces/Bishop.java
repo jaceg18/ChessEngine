@@ -4,6 +4,7 @@ import com.github.jaceg18.chess.Board;
 import com.github.jaceg18.chess.Move;
 import com.github.jaceg18.chess.identity.Color;
 
+
 import java.util.ArrayList;
 import java.util.List;
 

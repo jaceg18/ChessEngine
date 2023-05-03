@@ -13,6 +13,7 @@ import com.github.jaceg18.chess.identity.MoveType;
 import com.github.jaceg18.chess.ui.AudioPlayer;
 import com.github.jaceg18.chess.ui.GUI;
 
+import javax.swing.plaf.IconUIResource;
 import javax.swing.plaf.synth.SynthOptionPaneUI;
 import java.util.HashMap;
 import java.util.List;
@@ -30,8 +31,7 @@ public class AI {
     protected final Color AITeam;
     private int[][] history;
     private int depth;
-    private boolean depthIncrease;
-    private final int numThreads = 4;
+    private final int numThreads = 8;
     private OpeningBook openingBook;
     private final int openingMax = 5;
     private int openingAmount = 0;
@@ -45,7 +45,6 @@ public class AI {
     public AI(Color AITeam, int depth){
         this.AITeam = AITeam;
         this.depth = depth;
-        this.depthIncrease = false;
         this.transpositionTable = new HashMap<>();
         history = new int[8][8];
 
@@ -71,11 +70,6 @@ public class AI {
         }
 
         if (openingFailed) {
-
-            if (GameState.getGameState(board) == GameState.END && !depthIncrease) {
-                this.depth += 2;
-                this.depthIncrease = true;
-            }
             Move move = search(board, depth);
             board.makeMove(move, Flag.NORMAL);
             AudioPlayer.playSound(move.getMoveType() == MoveType.CAPTURE);
@@ -103,6 +97,11 @@ public class AI {
      */
 
     public Move search(Board board, int depth) {
+        int numLegalMoves = getNumLegalMoves(board, AITeam) + getNumLegalMoves(board, Color.invert(AITeam));
+
+        int adjustedDepth = (numLegalMoves <= 18) ? depth + 2 : depth;
+        adjustedDepth = (numLegalMoves <= 10) ? depth + 4 : depth;
+
         AtomicInteger alpha = new AtomicInteger(Integer.MIN_VALUE);
         AtomicInteger beta = new AtomicInteger(Integer.MAX_VALUE);
         ConcurrentLinkedQueue<ScoredMove> bestMoves = new ConcurrentLinkedQueue<>();
@@ -147,7 +146,7 @@ public class AI {
      */
 
     private ScoredMove searchHelper(Board board, int depth, AtomicInteger alpha, AtomicInteger beta) {
-        Color currentPlayer = AITeam; // Use AITeam instead of GUI.getController().getPlayerTeam();
+        Color currentPlayer = AITeam;
         List<Move> moves = board.getSortedMoves(currentPlayer, history);
 
         int localAlpha = alpha.get();
@@ -365,5 +364,12 @@ public class AI {
      */
     private void updateHistory(Move move, int depth){
         history[move.getFromRow()][move.getFromCol()] += depth * depth;
+    }
+
+    /**
+     * Helper method for increasing depth
+     */
+    public int getNumLegalMoves(Board board, Color color){
+        return board.getSortedMoves(color, history).size();
     }
 }

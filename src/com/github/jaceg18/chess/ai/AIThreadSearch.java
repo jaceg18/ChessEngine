@@ -40,7 +40,7 @@ public class AIThreadSearch extends SwingWorker<Void, Void> {
      */
     @Override
     protected void done() {
-        gui.getController().switchTurns();
+        GUI.getController().switchTurns();
         gui.AI_THINKING = false;
     }
 }

@@ -23,7 +23,6 @@ public class GUI extends JPanel implements ActionListener {
 
     public Board board;
     private Timer timer;
-
     private static Console console;
 
     public static boolean flip = false;
@@ -36,9 +35,8 @@ public class GUI extends JPanel implements ActionListener {
     private AI ai2;
     private Color playerTeam;
     public boolean AI_THINKING = false;
-
     public static String gameNotation;
-
+    private int depth = 4;
 
     /**
      * Constructor for JPanel
@@ -49,8 +47,8 @@ public class GUI extends JPanel implements ActionListener {
         this.playerTeam = playerTeam;
         this.controller = new Controller(board, playerTeam);
         this.timer = new Timer(TICK_SPEED, this);
-        this.ai = new AI(Color.invert(playerTeam), 4);
-        this.ai2 = new AI(playerTeam, 4);
+        this.ai = new AI(Color.invert(playerTeam), depth);
+        this.ai2 = new AI(playerTeam, depth);
         gameNotation = "";
 
         flip = playerTeam == Color.BLACK;
@@ -116,9 +114,8 @@ public class GUI extends JPanel implements ActionListener {
     public void resetGame(){
         board = new Board();
         controller = new Controller(board, playerTeam);
-        ai = new AI(Color.invert(playerTeam), 4);
-        // If ai vs ai
-        ai2 = new AI(playerTeam, 4);
+        ai = new AI(Color.invert(playerTeam), depth);
+        ai2 = new AI(playerTeam, depth);
         AI_THINKING = false;
 
     }
@@ -163,9 +160,9 @@ public class GUI extends JPanel implements ActionListener {
         repaint();
         if (!Utility.isGameOver(board)) {
             if (controller.getTurnToMove() != controller.getPlayerTeam() && !AI_THINKING) {
-                AI_THINKING = true;
-                aiThreadSearch = new AIThreadSearch(ai, this);
-                aiThreadSearch.execute();
+               AI_THINKING = true;
+               aiThreadSearch = new AIThreadSearch(ai, this);
+               aiThreadSearch.execute();
             }
         } else {
             System.out.println("Game over!");

@@ -95,8 +95,8 @@ public class Controller implements MouseMotionListener, MouseListener {
      */
     @Override
     public void mousePressed(MouseEvent e) {
+        selectedPiece = null;
         if (turnToMove == playerTeam) {
-            selectedPiece = null;
             int row = e.getY() / GUI.SQUARE_SIZE;
             int col = e.getX() / GUI.SQUARE_SIZE;
 

@@ -5,13 +5,14 @@ import com.github.jaceg18.chess.Move;
 import com.github.jaceg18.chess.Utility;
 import com.github.jaceg18.chess.identity.Color;
 
+
 import java.util.List;
 
 /**
  * An abstract class representing a chess piece on the board.
  */
 @SuppressWarnings("unused")
-public abstract class Piece {
+public abstract class Piece  {
     private final Color color;
     private int row;
     private int col;

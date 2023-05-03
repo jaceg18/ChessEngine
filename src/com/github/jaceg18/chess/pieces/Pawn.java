@@ -2,7 +2,9 @@ package com.github.jaceg18.chess.pieces;
 
 import com.github.jaceg18.chess.Board;
 import com.github.jaceg18.chess.Move;
+import com.github.jaceg18.chess.Utility;
 import com.github.jaceg18.chess.identity.Color;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,6 +71,7 @@ public class Pawn extends Piece {
             if (capturedPiece != null && capturedPiece.getColor() != getColor())
                 moveSet.add(new Move(row, col, row + direction, col + 1, this));
         }
+
         addEnPassantMoves(moveSet, board, row, col, direction);
 
         return moveSet;
@@ -96,13 +99,18 @@ public class Pawn extends Piece {
      * @param col The col of the pawn
      * @param direction The direction of the pawn
      */
-    private void addEnPassantMoves(List<Move> moveSet, Board board, int row, int col, int direction){
+    private void addEnPassantMoves(List<Move> moveSet, Board board, int row, int col, int direction) {
         Piece leftPiece = col > 0 ? board.getPieceAt(row, col - 1) : null;
         Piece rightPiece = col < 7 ? board.getPieceAt(row, col + 1) : null;
-        if (leftPiece instanceof Pawn && leftPiece.getColor() != getColor() && ((Pawn) leftPiece).isEnPassantAvailable())
-            moveSet.add(new Move(row, col, row + direction, col - 1, this));
 
-        if (rightPiece instanceof Pawn && rightPiece.getColor() != getColor() && ((Pawn) rightPiece).isEnPassantAvailable())
-            moveSet.add(new Move(row, col, row + direction, col + 1, this));
+        if (leftPiece instanceof Pawn && leftPiece.getColor() != getColor() && ((Pawn) leftPiece).isEnPassantAvailable()) {
+            Move enPassantMove = new Move(row, col, row + direction, col - 1, this);
+            moveSet.add(enPassantMove);
+        }
+
+        if (rightPiece instanceof Pawn && rightPiece.getColor() != getColor() && ((Pawn) rightPiece).isEnPassantAvailable()) {
+            Move enPassantMove = new Move(row, col, row + direction, col + 1, this);
+            moveSet.add(enPassantMove);
+        }
     }
 }

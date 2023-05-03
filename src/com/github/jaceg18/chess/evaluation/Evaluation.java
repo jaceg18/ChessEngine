@@ -29,13 +29,13 @@ public class Evaluation {
     public static int PAWN_WEIGHT = 1;
     public static final int DEVELOPMENT_WEIGHT = 1;
     public static final int QUEEN_OPENING_WEIGHT = 1;
-    public static final  int BISHOP_VISION_WEIGHT = 1;
+    public static final int BISHOP_VISION_WEIGHT = 1;
     public static final int KING_SAFETY_WEIGHT = 2;
     public static final int PROMOTION_WEIGHT = 2;
     public static final int CENTER_WEIGHT = 2;
     public static final int KING_TO_CORNER_WEIGHT = 2;
     public static final int MOBILITY_WEIGHT = 1;
-    public static final  int ROOK_OPEN_FILE_WEIGHT = 1;
+    public static final int ROOK_OPEN_FILE_WEIGHT = 2;
     public static final int CHECK_WEIGHT = 1;
     public static final int KING_TROPISM_WEIGHT = 1;
     public static final int PIECE_COORDINATION_WEIGHT = 2;
@@ -81,7 +81,7 @@ public class Evaluation {
     public static int evaluate(Board board, Color AITeam) {
         Color opponentsTeam = Color.invert(AITeam);
 
-        if (GameState.getGameState(board) == GameState.END){
+        if (GameState.getGameState(board) == GameState.END) {
             PAWN_WEIGHT = 2;
         }
 
@@ -102,13 +102,14 @@ public class Evaluation {
                 getScoreDifference(board, AITeam, opponentsTeam, ROOK_OPEN_FILE_WEIGHT, Evaluation::getRookOpenFileScore) +
                 getScoreDifference(board, AITeam, opponentsTeam, CHECK_WEIGHT, Evaluation::getCheckScore) +
                 getScoreDifference(board, AITeam, opponentsTeam, KING_TROPISM_WEIGHT, Evaluation::getKingTropismScore) +
-                getScoreDifference(board, AITeam, opponentsTeam, PIECE_COORDINATION_WEIGHT, Evaluation::getPieceCoordinationScore)+
+                getScoreDifference(board, AITeam, opponentsTeam, PIECE_COORDINATION_WEIGHT, Evaluation::getPieceCoordinationScore) +
                 getScoreDifference(board, AITeam, opponentsTeam, KNIGHT_CENTER_CONTROL_SCORE, Evaluation::getKnightCenterControlScore);
     }
 
     private static int getScoreDifference(Board board, Color AITeam, Color opponentsTeam, int weight, BiFunction<Board, Color, Integer> scoreFunction) {
         return weight * (scoreFunction.apply(board, AITeam) - scoreFunction.apply(board, opponentsTeam));
     }
+
     /**
      * Evaluates material score
      *
@@ -147,6 +148,7 @@ public class Evaluation {
 
     /**
      * Evaluates center control for knights
+     *
      * @param board The board to evaluate
      * @param color The team to evaluate
      * @return The evaluation for knight center control
@@ -159,6 +161,7 @@ public class Evaluation {
                 .mapToInt(k -> KNIGHT_CENTER_CONTROL_SCORE)
                 .sum();
     }
+
     /**
      * Evaluates and encourages Knight and Pawn development in the opening
      *
@@ -253,7 +256,21 @@ public class Evaluation {
      */
     public static int getPieceCoordinationScore(Board board, Color color) {
         List<Piece> pieces = board.getTeamPieces(color);
-        return pieces.stream().mapToInt(piece -> Utility.getAttackingPieces(board, piece.getRow(), piece.getCol(), color).stream().filter(attacker -> attacker.getColor() == color).mapToInt(attacker -> COORDINATION_WEIGHTS.getOrDefault(attacker.getClass(), 0)).sum()).sum();
+        return pieces
+                .stream()
+                .mapToInt(
+                    piece -> Utility
+                        .getAttackingPieces(board, piece.getRow(), piece.getCol(), color)
+                        .stream()
+                        .filter(
+                                attacker -> attacker.getColor() == color
+                        ).mapToInt(
+                                attacker -> COORDINATION_WEIGHTS.getOrDefault(
+                                        attacker.getClass(), 0
+                                )
+                        )
+                        .sum()
+                ).sum();
     }
 
     /**
@@ -330,7 +347,8 @@ public class Evaluation {
             if (centerPiece != null && centerPiece.getColor() == color) {
                 score += (centerPiece instanceof Pawn ? CENTER_CONTROL_PAWN_SCORE : CENTER_CONTROL_OTHER_PIECE_SCORE) * multiplier;
             }
-            if (Utility.isAttacked(board, centerSquare[0], centerSquare[1], opponentTeam)) score += (CENTER_ATTACK_SCORE * multiplier);
+            if (Utility.isAttacked(board, centerSquare[0], centerSquare[1], opponentTeam))
+                score += (CENTER_ATTACK_SCORE * multiplier);
         }
         return score;
     }
@@ -507,8 +525,10 @@ public class Evaluation {
         }
         return score;
     }
+
     /**
      * A helper method for getPawnScore
+     *
      * @param color The team to evaluate
      * @param pawns The list of pawns to evaluate
      * @param state The current game state
@@ -588,7 +608,6 @@ public class Evaluation {
         return (color == Color.WHITE) ? new int[][]{{0, 0}, {0, 1}, {0, 2}, {0, 3}, {0, 4}, {0, 5}, {0, 6}, {0, 7}} :
                 new int[][]{{7, 0}, {7, 1}, {7, 2}, {7, 3}, {7, 4}, {7, 5}, {7, 6}, {7, 7}};
     }
-
 
 
 }

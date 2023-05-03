@@ -5,8 +5,10 @@ import com.github.jaceg18.chess.identity.MoveType;
 import com.github.jaceg18.chess.pieces.Pawn;
 import com.github.jaceg18.chess.pieces.Piece;
 
+import java.io.Serializable;
+
 @SuppressWarnings("unused")
-public class Move {
+public class Move implements Serializable {
     private final int fromRow;
     private final int fromCol;
     private final int toRow;
@@ -174,7 +176,9 @@ public class Move {
      */
     public void setCapturedPiece(Piece capturedPiece){
         this.capturedPiece = capturedPiece;
-        this.capturePieceHasMoved = capturedPiece.hasMoved();
+        if (capturedPiece != null) {
+            this.capturePieceHasMoved = capturedPiece.hasMoved();
+        }
     }
     /**
      * Sets the promotion Piece.

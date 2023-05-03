@@ -4,19 +4,22 @@ import com.github.jaceg18.chess.identity.Color;
 import com.github.jaceg18.chess.identity.Flag;
 import com.github.jaceg18.chess.identity.MoveType;
 import com.github.jaceg18.chess.pieces.King;
+import com.github.jaceg18.chess.pieces.Pawn;
 import com.github.jaceg18.chess.pieces.Piece;
 import com.github.jaceg18.chess.ui.GUI;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
-public class Board {
+public class Board  {
     public static final int ROWS = 8;
     public static final int COLS = 8;
     private int skippedMoves;
     private Move lastMove;
+    private Move previousMove;
     private HashMap<Integer, Integer> positionHistory;
     private static long[][][] zobristTable;
     private Piece[][] pieces;
@@ -48,6 +51,8 @@ public class Board {
             }
         }
         board.positionHistory = new HashMap<>(this.positionHistory);
+        board.lastMove = lastMove;
+        board.previousMove = previousMove;
         return board;
     }
 
@@ -183,14 +188,16 @@ public class Board {
         int positionHashCode = this.hashCode();
         positionHistory.put(positionHashCode, positionHistory.getOrDefault(positionHashCode, 0) + 1);
     }
-
     /**
      * Makes a move on the board
      *
      * @param move The move to make
      */
     public void makeMove(Move move, Flag flag) {
-        lastMove = move;
+        if (flag == Flag.NORMAL){
+            previousMove = lastMove;
+            lastMove = move;
+        }
 
         int toRow = move.getToRow();
         int fromRow = move.getFromRow();
@@ -203,29 +210,29 @@ public class Board {
             updatePositionHistory();
         }
 
-        if (Utility.isMoveCastle(move)) {
-            makeCastleMove(move);
-        } else {
-            pieces[toRow][toCol] = piece;
-            pieces[fromRow][fromCol] = null;
+            if (Utility.isMoveCastle(move)) {
+                makeCastleMove(move);
+            } else {
+                pieces[toRow][toCol] = piece;
+                pieces[fromRow][fromCol] = null;
 
-            move.setSourcePieceHasMoved(move.getPiece().hasMoved());
+                move.setSourcePieceHasMoved(move.getPiece().hasMoved());
 
-            if (Utility.isMoveCapture(this, move)) {
-                move.setCapturePieceHasMoved(move.getCapturedPiece().hasMoved());
-                move.getCapturedPiece().setCaptured(true);
+                if (Utility.isMoveCapture(this, move)) {
+                    move.setCapturePieceHasMoved(move.getCapturedPiece().hasMoved());
+                    move.getCapturedPiece().setCaptured(true);
+                }
+
+                piece.setMoved(true);
+                piece.setPosition(toRow, toCol);
+
+                // Handle pawn promotion
+                if (Utility.isPromotionMove(move)) {
+                    pieces[toRow][toCol] = move.getPromotionPiece();
+                }
             }
-
-            piece.setMoved(true);
-            piece.setPosition(toRow, toCol);
-
-            // Handle pawn promotion
-            if (Utility.isPromotionMove(move)) {
-                pieces[toRow][toCol] = move.getPromotionPiece();
-            }
-
-        }
     }
+
 
     /**
      * Undo a move on the board
@@ -240,21 +247,21 @@ public class Board {
         Piece movedPiece = move.getPiece();
 
         if (Utility.isMoveCastle(move)) {
-            undoCastleMove(move);
+                undoCastleMove(move);
         } else {
-            pieces[fromRow][fromCol] = movedPiece;
-            pieces[toRow][toCol] = move.getCapturedPiece();
+                pieces[fromRow][fromCol] = movedPiece;
+                pieces[toRow][toCol] = move.getCapturedPiece();
 
-            if (Utility.isMoveCapture(this, move)) {
-                move.getCapturedPiece().setMoved(move.getCapturedPieceHasMoved());
-                move.getCapturedPiece().setCaptured(false);
-                move.getCapturedPiece().setPosition(toRow, toCol);
+                if (Utility.isMoveCapture(this, move)) {
+                    move.getCapturedPiece().setMoved(move.getCapturedPieceHasMoved());
+                    move.getCapturedPiece().setCaptured(false);
+                    move.getCapturedPiece().setPosition(toRow, toCol);
+                }
+
+                movedPiece.setMoved(move.getSourcePieceHasMoved());
+                movedPiece.setPosition(fromRow, fromCol);
             }
-
-            movedPiece.setMoved(move.getSourcePieceHasMoved());
-            movedPiece.setPosition(fromRow, fromCol);
         }
-    }
 
     /**
      * A helper method for makeMove that handles castle moves
@@ -336,7 +343,7 @@ public class Board {
         if (type == MoveType.ORDERED) {
             List<Move> orderedMoves = new ArrayList<>();
 
-            for (MoveType moveType : List.of(MoveType.CHECKMATE, MoveType.CAPTURE, MoveType.PROMOTION, MoveType.CHECK, MoveType.CASTLE)) {
+            for (MoveType moveType : List.of(MoveType.CHECKMATE, MoveType.CAPTURE, MoveType.PROMOTION, MoveType.CHECK, MoveType.CASTLE, MoveType.ENPASSANT)) {
                 orderedMoves.addAll(movesByType.getOrDefault(moveType, List.of()));
             }
 

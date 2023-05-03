@@ -18,7 +18,7 @@ public class Utility {
     private static final int PAWN_VALUE = 100;
     private static final int KNIGHT_VALUE = 350;
     private static final int BISHOP_VALUE = 375;
-    private static final int ROOK_VALUE = 500;
+    private static final int ROOK_VALUE = 550;
     private static final int QUEEN_VALUE = 900;
     private static final int KING_VALUE = 0;
     private static final int[][] knightOffsets = {{-2, -1}, {-2, 1}, {-1, -2}, {-1, 2}, {1, -2}, {1, 2}, {2, -1}, {2, 1}};
@@ -70,7 +70,7 @@ public class Utility {
      * @return The index of the piece
      */
 
-    static int pieceToIndex(Piece piece) {
+    public static int pieceToIndex(Piece piece) {
         int base = piece.getColor() == Color.WHITE ? 0 : 6;
         return switch (piece.getClass().getSimpleName()) {
             case "Pawn" -> base;
@@ -130,7 +130,7 @@ public class Utility {
         board[7][1] = new Knight(Color.WHITE, 7, 1);
         board[7][2] = new Bishop(Color.WHITE, 7, 2);
         board[7][3] = new Queen(Color.WHITE, 7, 3);
-        board[7][4] = new King(Color.WHITE, 7, 4);
+        board[7][4] = new King(Color.WHITE, 7, 4); // 4 -> 7 col
         board[7][5] = new Bishop(Color.WHITE, 7, 5);
         board[7][6] = new Knight(Color.WHITE, 7, 6);
         board[7][7] = new Rook(Color.WHITE, 7, 7);
@@ -463,6 +463,59 @@ public class Utility {
             move.setPromotionPiece(promotionPiece);
         }
         return isPromotionMove;
+    }
+
+    /**
+     * Determines if a pawn can enpassant
+     * @param board The board to check
+     * @param move The move to check
+     * @return A boolean stating whether an enpassant move can be performed
+     */
+
+    public static boolean isEnPassantMove(Board board, Move move) {
+        if (!(move.getPiece() instanceof Pawn)) return false;
+
+        int fromRow = move.getFromRow();
+        int toRow = move.getToRow();
+        int fromCol = move.getFromCol();
+        int toCol = move.getToCol();
+
+        boolean doublePawnPush = isDoublePawnPush(board.getLastMove());
+        boolean colIncremented = (Math.abs(fromCol - toCol) == 1);
+
+        Piece capturedPawn = board.getPieceAt(fromRow, toCol);
+
+        if (capturedPawn instanceof Pawn && capturedPawn.getColor() != move.getPiece().getColor()){
+            int capturedPawnStartingRow = (capturedPawn.getColor() == Color.WHITE) ? 6 : 1;
+            if (Math.abs(capturedPawn.getRow() - capturedPawnStartingRow) == 2) {
+                move.setMoveType(ENPASSANT);
+                move.setCapturedPiece(capturedPawn);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Helper method for isEnPassantMove to determine if the last opponent move can be en passant
+     * @param lastMove The last move to check for a double pawn push
+     * @return A boolean stating whether a pawn can be en passant
+     */
+
+    private static boolean isDoublePawnPush(Move lastMove) {
+        if (lastMove == null) {
+            return false;
+        }
+
+        Piece movingPiece = lastMove.getPiece();
+        if (!(movingPiece instanceof Pawn)) {
+            return false;
+        }
+
+        int fromRow = lastMove.getFromRow();
+        int toRow = lastMove.getToRow();
+
+        return Math.abs(fromRow - toRow) == 2;
     }
 
     /**

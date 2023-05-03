@@ -8,7 +8,8 @@ public enum MoveType {
     CASTLE(3),
     CHECK(4),
     CHECKMATE(5),
-    ORDERED(6);
+    ORDERED(6),
+    ENPASSANT(-2);
 
     private final int priority;
 
